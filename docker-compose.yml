@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  fastgithub:
+    image: slcnx/fastgithub:latest
+    container_name: fastgithub
+    restart: always
+    network_mode: host
+    environment:
+      - LANG=zh_CN.utf8
