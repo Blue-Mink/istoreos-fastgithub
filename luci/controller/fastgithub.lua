@@ -62,13 +62,14 @@ function act_control()
 	local http = require "luci.http"
 	local sys  = require "luci.sys"
 	local action = http.formvalue("action")
+	local container = "fastgithub"
 
 	if action == "start" then
-		sys.call("docker start fastgithub 2>/dev/null")
+		sys.call("docker start " .. container .. " 2>/dev/null")
 	elseif action == "stop" then
-		sys.call("docker stop fastgithub 2>/dev/null")
+		sys.call("docker stop " .. container .. " 2>/dev/null")
 	elseif action == "restart" then
-		sys.call("docker restart fastgithub 2>/dev/null")
+		sys.call("docker restart " .. container .. " 2>/dev/null")
 	end
 
 	http.prepare_content("application/json")
@@ -79,8 +80,9 @@ function act_log()
 	local http = require "luci.http"
 	local json = {}
 	local tail_lines = 100
+	local container = "fastgithub"
 
-	local handle = io.popen("docker logs fastgithub --tail " .. tail_lines .. " 2>&1")
+	local handle = io.popen("docker logs " .. container .. " --tail " .. tail_lines .. " 2>&1")
 	if handle then
 		local log = handle:read("*a")
 		handle:close()
