@@ -1,34 +1,62 @@
 global {
+    # TProxy 监听端口
     tproxy_port: 12345
     tproxy_port_protect: true
+
+    # 日志级别: error / warn / info / debug / trace
     log_level: info
+
+    # WAN 口（自动检测）
     wan_interface: auto
+
+    # LAN 口（旁路由模式绑定 br-lan）
+    lan_interface: br-lan
+
+    # 自动配置内核参数
     auto_config_kernel_parameter: true
+
+    # 节点连通性检测
     tcp_check_url: 'http://cp.cloudflare.com'
     udp_check_dns: 'dns.google:53'
     check_interval: 30s
-    lan_interface: br-lan
 }
 
-# 节点定义 - 使用 fastgithub 作为 upstream
+# =============================================
+# 节点定义 - 将 fastgithub 作为上游代理
+# =============================================
 node 'fastgithub' {
+    # HTTP 代理协议
     protocol: 'http'
+
+    # fastgithub 监听在本地 38457 端口
     address: '127.0.0.1:38457'
 }
 
+# =============================================
 # 路由分组
+# =============================================
 group 'github_accel' {
+    # 使用 fastgithub 节点
     node: 'fastgithub'
 }
 
-# 路由规则 - 只代理 GitHub 相关的流量
+# =============================================
+# 路由规则
+# =============================================
 routing {
-    # GitHub 域名走 fastgithub 加速
+    # ---- GitHub 全系列域名走 fastgithub 加速 ----
     domain(contains: 'github.com') -> 'github_accel'
     domain(contains: 'githubassets.com') -> 'github_accel'
     domain(contains: 'githubusercontent.com') -> 'github_accel'
     domain(contains: 'github.io') -> 'github_accel'
+    domain(contains: 'githubapp.com') -> 'github_accel'
+    domain(contains: 'githubstatus.com') -> 'github_accel'
 
-    # 其余流量直连
+    # ---- 其他常见开发者站点（可选） ----
+    # domain(contains: 'npmjs.org') -> 'github_accel'
+    # domain(contains: 'docker.com') -> 'github_accel'
+    # domain(contains: 'python.org') -> 'github_accel'
+
+    # ---- 其余所有流量直连 ----
     final: 'direct'
 }
