@@ -1,0 +1,49 @@
+<%-
+local uci = require "luci.model.uci".cursor()
+-%>
+
+<div class="cbi-section" style="margin-bottom:10px">
+	<div class="cbi-section-node">
+		<div style="padding:8px 12px;background:#f8f9fa;border-radius:4px;border:1px solid #ddd">
+			<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+				<span style="font-weight:bold">\U0001f4cb \u5bb9\u5668\u65e5\u5fd7</span>
+				<span id="fg_log_status" style="font-size:12px;color:#888">\u7b49\u5f85\u52a0\u8f7d...</span>
+				<div style="flex:1"></div>
+				<button class="cbi-button cbi-button-apply" style="padding:3px 12px;font-size:12px" onclick="document.getElementById('fg_log_text').value='';fgFetchLog()">\u5237\u65b0</button>
+				<button class="cbi-button cbi-button-reset" style="padding:3px 12px;font-size:12px" onclick="document.getElementById('fg_log_text').value=''">\u6e05\u7a7a</button>
+			</div>
+			<textarea id="fg_log_text" class="cbi-input-textarea" style="width:100%;height:350px;font-family:monospace;font-size:12px;background:#1e1e1e;color:#d4d4d4;padding:10px;border-radius:4px;border:1px solid #333;resize:vertical" readonly="readonly">\u6b63\u5728\u8fde\u63a5...</textarea>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+function fgFetchLog() {
+	var statusEl = document.getElementById('fg_log_status');
+	var textEl = document.getElementById('fg_log_text');
+	statusEl.textContent = '\u52a0\u8f7d\u4e2d...';
+	var xhr = new XMLHttpRequest();
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState == 4) {
+			if (xhr.status == 200) {
+				try {
+					var data = JSON.parse(xhr.responseText);
+					textEl.value = data.log || '(\u6682\u65e0\u65e5\u5fd7)';
+					statusEl.textContent = '\u66f4\u65b0\u4e8e ' + new Date().toLocaleTimeString() + ' | ' + (data.tail || '') + ' \u884c';
+					textEl.scrollTop = textEl.scrollHeight;
+				} catch(e) { statusEl.textContent = '\u89e3\u6790\u5931\u8d25'; }
+			} else {
+				statusEl.textContent = 'HTTP ' + xhr.status;
+				textEl.value = '\u83b7\u53d6\u65e5\u5fd7\u5931\u8d25';
+			}
+		}
+	};
+	xhr.open('GET', '<%=luci.dispatcher.build_url("admin","services","fastgithub","log")%>', true);
+	xhr.send();
+}
+
+fgFetchLog();
+setInterval(fgFetchLog, 5000);
+//]]>
+</script>
