@@ -1,0 +1,34 @@
+global {
+    tproxy_port: 12345
+    tproxy_port_protect: true
+    log_level: info
+    wan_interface: auto
+    auto_config_kernel_parameter: true
+    tcp_check_url: 'http://cp.cloudflare.com'
+    udp_check_dns: 'dns.google:53'
+    check_interval: 30s
+    lan_interface: br-lan
+}
+
+# 节点定义 - 使用 fastgithub 作为 upstream
+node 'fastgithub' {
+    protocol: 'http'
+    address: '127.0.0.1:38457'
+}
+
+# 路由分组
+group 'github_accel' {
+    node: 'fastgithub'
+}
+
+# 路由规则 - 只代理 GitHub 相关的流量
+routing {
+    # GitHub 域名走 fastgithub 加速
+    domain(contains: 'github.com') -> 'github_accel'
+    domain(contains: 'githubassets.com') -> 'github_accel'
+    domain(contains: 'githubusercontent.com') -> 'github_accel'
+    domain(contains: 'github.io') -> 'github_accel'
+
+    # 其余流量直连
+    final: 'direct'
+}
